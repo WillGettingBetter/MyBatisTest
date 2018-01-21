@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.it.dao.FounderMessageDao">
+	<cache />
+	<select id="getAllInfo" parameterType="int" resultType="FounderMessageAndUser">
+		select
+		messageid, userid, username,
+		fildid, messagecontent,
+		messagedate,user_sex, user_tel, user_birth, user_psw
+		from
+		foundermessage,founderuser
+		where messageid=#{value} and
+		foundermessage.userid=founderuser.user_id
+	</select>
+
+	<select id="getThree" parameterType="int"
+		resultType="FounderMessageAndUserAndFile">
+		select
+		messageid, userid, username,
+		foundermessage.fildid,
+		messagecontent,
+		messagedate,user_sex, user_tel, user_birth,
+		user_psw,filename,filepic,fileprice,filedes
+		from
+		foundermessage,founderuser,founderfile
+		where messageid=#{value} and
+		foundermessage.userid=founderuser.user_id and
+		foundermessage.fildid=founderfile.fildid
+	</select>
+	<resultMap type="FounderMessageOne" id="getall">
+		<id column="messageid" property="messageid" />
+		<result column="userid" property="userid" />
+		<result column="username" property="username" />
+		<result column="fildid" property="fildid" />
+		<result column="messagecontent" property="messagecontent" />
+		<result column="messagedate" property="messagedate" />
+		<association property="founderUser" javaType="FounderUser">
+			<!-- column对应sql语句中的字段，property对应数据库中的字段 -->
+			<id column="userid" property="user_id" />
+			<result column="username" property="user_name" />
+			<result column="user_sex" property="user_sex" />
+			<result column="user_tel" property="user_tel" />
+			<result column="user_birth" property="user_birth" />
+			<result column="user_psw" property="user_psw" />
+		</association>
+	</resultMap>
+
+	<select id="getAll" resultMap="getall">
+		select messageid, userid,
+		username, fildid, messagecontent, messagedate, user_sex, user_tel,
+		user_birth, user_psw
+		from foundermessage,founderuser
+		where
+		foundermessage.userid=founderuser.user_id
+	</select>
+
+	<resultMap type="FounderFileAndList" id="listMsg">
+		<id column="fildid" property="fildid" />
+		<result column="filename" property="filename" />
+		<result column="filepic" property="filepic" />
+		<result column="fileprice" property="fileprice" />
+		<result column="filedes" property="filedes" />
+		<collection property="mesList" ofType="FounderMessage">
+			<id column="messageid" property="messageid" />
+			<result column="userid" property="userid" />
+			<result column="username" property="username" />
+			<result column="fildid" property="fildid" />
+			<result column="messagecontent" property="messagecontent" />
+			<result column="messagedate" property="messagedate" />
+		</collection>
+	</resultMap>
+	<select id="getFileAndMsg" parameterType="int" resultMap="listMsg">
+		select
+		founderfile.fildid, filename, filepic, fileprice, filedes
+		,messageid,
+		userid, username, messagecontent, messagedate
+		from
+		founderfile,foundermessage
+		where
+		founderfile.fildid=foundermessage.fildid and
+		founderfile.fildid=#{value}
+	</select>
+
+
+
+
+	<!-- 延迟加载 -->
+	<resultMap type="FounderMessageOne" id="getallLazy">
+		<id column="messageid" property="messageid" />
+		<result column="userid" property="userid" />
+		<result column="username" property="username" />
+		<result column="fildid" property="fildid" />
+		<result column="messagecontent" property="messagecontent" />
+		<result column="messagedate" property="messagedate" />
+		<association property="founderUser" javaType="FounderUser"
+			column="userid" select="delayedLoading">
+		</association>
+	</resultMap>
+	<select id="delayedLoading" parameterType="int" resultType="FounderUser">
+		select * from founderuser where user_id = #{value}
+	</select>
+	<select id="getAllLazy" resultMap="getallLazy">
+		select *
+		from foundermessage
+	</select>
+</mapper>

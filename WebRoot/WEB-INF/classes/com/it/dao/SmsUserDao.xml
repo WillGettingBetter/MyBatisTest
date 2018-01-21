@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.it.dao.SmsUserDao"><!-- namespace不可以用别名进行配置 -->
+	<!-- 通过userid获取当前用户信息 -->
+	<select id="getUserByid" parameterType="int" resultType="smsuser">
+		select *
+		from sms_user where userid=#{value}
+	</select>
+	<!-- 查找到所有用户信息 -->
+	<select id="getUsers" resultType="com.it.entity.SmsUser">
+		select * from sms_user
+	</select>
+	<!-- 插入使用userid自增 -->
+	<insert id="insertUser" parameterType="com.it.entity.SmsUser" >
+		<selectKey resultType="java.lang.Integer" order="BEFORE"
+			keyProperty="userid">
+			select userid.nextval from dual
+		</selectKey>
+		<!-- 注入技术:可以有效防止sql语句注入 -->
+		<!-- insert into sms_user(userid, username, userpsw, usersex, usertel, 
+			userbirth) values (#{userid}, #{username}, #{userpsw}, #{usersex}, #{usertel}, 
+			#{userbirth}) -->
+
+		<!-- 拼接技术:${}，不能防止注入，但是在进行模糊查询时必须使用到拼接技术 -->
+		insert into
+		sms_user(userid, username, userpsw, usersex, usertel,
+		userbirth)
+		values
+		(${userid}, #{username}, '${userpsw}', '${usersex}',
+		'${usertel}',
+		#{userbirth})
+	</insert>
+
+	<!-- 根据userid和username修改当前用户的信息 -->
+	<update id="updateInfo" parameterType="com.it.entity.SmsUser" >
+		update sms_user set
+		username = (#{username}) where userid = (#{userid})
+	</update>
+	<!-- 根据userid删除对应的用户信息 -->
+	<delete id="deleteUser" parameterType="int">
+		delete from sms_user where
+		userid=(#{userid})
+	</delete>
+
+	<!-- 多参数查询 -->
+	<select id="getUserPsw" resultType="java.lang.String">
+		select userpsw from sms_user
+		where userid=(#{0}) and username=(#{1})
+	</select>
+
+	<!-- 通过用户名，模糊查询出具体用户信息 -->
+	<select id="getUserInfo" parameterType="java.lang.String"
+		resultType="com.it.entity.SmsUser">
+		select * from sms_user where username like '%${value}%'
+	</select>
+
+	<!-- 通过in查询，找到相应的用户信息 -->
+	<select id="getSomeUsers" parameterType="java.util.Map"
+		resultType="com.it.entity.SmsUser">
+		select * from sms_user where userid in
+		<foreach item="item" collection="type" index="index" open="("
+			separator="," close=")">#{item}</foreach>
+	</select>
+
+	<select id="findUserInfo" parameterType="SmsUser" resultType="SmsUser">
+		select * from sms_user where 1=1
+		<if test="userid!=null and userid!=''">
+			and userid=#{userid}
+		</if>
+		<if test="username!=null and username!=''">
+			and username like concat(concat('%',#{username}),'%')
+		</if>
+	</select>
+
+	<select id="getListUser" parameterType="java.util.List"
+		resultType="SmsUser">
+		select * from sms_user
+		<where>
+			<if test="list!=null and list!=''">
+				<foreach collection="list" open=" userid in (" close=")"
+					item="userid" separator="," index="4">
+					#{userid}
+				</foreach>
+			</if>
+		</where>
+	</select>
+	
+	<select id="getListUser1" parameterType="int[]" resultType="com.it.entity.SmsUser">
+		select * from sms_user
+		<where>
+			<if test="array!=null">
+				<foreach collection="array" open=" userid in (" close=")"
+					item="userid" separator=",">
+					#{userid}
+				</foreach>
+			</if>
+		</where>
+	</select>
+</mapper>
